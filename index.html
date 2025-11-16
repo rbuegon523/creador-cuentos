@@ -3,47 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Cuentos Infantiles</title>
+    <title>Generador de Cuentos Mágicos</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #a29bfe;
-            --secondary-color: #fab1a0;
-            --background-color: #f7f9fb;
-            --text-color: #2d3436;
-            --white-color: #ffffff;
-            --border-color: #dfe6e9;
-            --button-hover-color: #6c5ce7;
-            --yellow-light: #fffbe6;
+            --bg-color: #f0f8ff;
+            --container-bg: #ffffff;
+            --text-color: #333;
+            --label-color: #555;
+            --border-color: #e0e0e0;
+            --primary-color: #007bff;
+            --primary-text: #ffffff;
+            --button-bg: #28a745;
+            --button-text: #ffffff;
+            --button-hover-bg: #218838;
+            --shadow-color: rgba(0, 123, 255, 0.1);
+            --title-color: #0056b3;
+            --subtitle-color: #6c757d;
+            --error-bg: #f8d7da;
+            --error-text: #721c24;
+            --story-bg: #e9f7ef;
+            --story-border: #28a745;
+            --action-button-bg: #ffc107;
+            --action-button-hover-bg: #e0a800;
+        }
+
+        body.dark-mode {
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --label-color: #bbbbbb;
+            --border-color: #444;
+            --primary-color: #3a9cff;
+            --shadow-color: rgba(58, 156, 255, 0.1);
+            --title-color: #6ab7ff;
+            --subtitle-color: #999;
+            --error-bg: #2c1a1d;
+            --error-text: #f8d7da;
+            --story-bg: #232a25;
+            --story-border: #28a745;
+            --action-button-bg: #ffc107;
+            --action-button-hover-bg: #e0a800;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
             font-family: 'Nunito', sans-serif;
-            background-color: var(--background-color);
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><g fill="%23e0e6eb" fill-opacity="0.4"><circle cx="25" cy="25" r="2"/><circle cx="75" cy="75" r="2"/><circle cx="25" cy="75" r="2"/><circle cx="75" cy="25" r="2"/></g></svg>');
+            background-color: var(--bg-color);
             color: var(--text-color);
-            margin: 0;
             padding: 20px;
             display: flex;
             justify-content: center;
             align-items: flex-start;
             min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         #root {
             width: 100%;
             max-width: 800px;
+            position: relative;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--label-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .theme-toggle:hover {
+            background-color: rgba(128,128,128,0.1);
         }
 
         .container {
-            background-color: var(--white-color);
-            padding: 30px 40px;
+            background-color: var(--container-bg);
+            padding: 40px 50px;
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+            box-shadow: 0 10px 40px var(--shadow-color);
             animation: fadeIn 0.5s ease-in-out;
             border: 1px solid var(--border-color);
+            width: 100%;
+            transition: background-color 0.3s, border-color 0.3s;
         }
         
         @keyframes fadeIn {
@@ -51,86 +110,99 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        h1 {
-            color: var(--primary-color);
+        header {
             text-align: center;
-            font-size: 3em;
-            margin-bottom: 25px;
-            text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.8), -2px -2px 0px rgba(0,0,0,0.05);
+            margin-bottom: 40px;
         }
 
-        .form-group {
+        h1 {
+            color: var(--title-color);
+            font-size: 2.8em;
+            font-weight: 800;
+        }
+        
+        .subtitle {
+            color: var(--subtitle-color);
+            font-size: 1.2em;
+            margin-top: 5px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px 30px;
             margin-bottom: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
         }
 
         label {
-            display: block;
             margin-bottom: 8px;
             font-weight: 700;
-            font-size: 1.1em;
-            color: var(--text-color);
+            font-size: 1em;
+            color: var(--label-color);
         }
 
         input[type="text"],
-        input[type="number"],
-        select,
-        textarea {
+        select {
             width: 100%;
-            padding: 12px;
+            padding: 12px 15px;
             border: 1px solid var(--border-color);
             border-radius: 10px;
             box-sizing: border-box;
             font-size: 1em;
             font-family: 'Nunito', sans-serif;
+            background-color: var(--container-bg);
+            color: var(--text-color);
             transition: border-color 0.3s, box-shadow 0.3s;
         }
         
-        input:focus, select:focus, textarea:focus {
+        input:focus, select:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 8px rgba(162, 155, 254, 0.5);
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.25);
         }
-
-        textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        button {
-            background-color: var(--primary-color);
-            background-image: linear-gradient(45deg, var(--primary-color) 0%, #74b9ff 100%);
-            color: var(--white-color);
+        
+        button#submit-button {
+            background-color: #34d399;
+            color: var(--button-text);
             padding: 15px 30px;
             border: none;
-            border-radius: 10px;
+            border-radius: 50px;
             cursor: pointer;
             font-size: 1.2em;
             font-weight: 700;
             display: block;
-            margin: 30px auto 0;
+            margin: 40px auto 0;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(162, 155, 254, 0.4);
+            box-shadow: 0 4px 15px rgba(52, 211, 153, 0.3);
         }
 
-        button:hover {
-            transform: translateY(-2px);
-            background-image: linear-gradient(45deg, var(--button-hover-color) 0%, #0984e3 100%);
-            box-shadow: 0 6px 20px rgba(108, 92, 231, 0.5);
+        button#submit-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(52, 211, 153, 0.4);
+            background-color: #10b981;
         }
-
+        
         button:disabled {
-            background: #dcd6ff;
-            background-image: none;
+            background: #9ca3af !important;
             cursor: not-allowed;
-            transform: translateY(0);
-            box-shadow: none;
+            transform: translateY(0) !important;
+            box-shadow: none !important;
         }
 
         .story-result {
             margin-top: 30px;
             padding: 25px;
-            background-color: var(--yellow-light);
-            border-left: 6px solid var(--secondary-color);
+            background-color: var(--story-bg);
+            border-left: 6px solid var(--story-border);
             border-radius: 10px;
             animation: slideIn 0.5s ease-out;
         }
@@ -138,9 +210,7 @@
         #story-text {
             white-space: pre-wrap;
             line-height: 1.7;
-            color: #5d4037;
-            font-family: 'Nunito', sans-serif;
-            font-size: 1em;
+            font-size: 1.1em;
             width: 100%;
             box-sizing: border-box;
             border: none;
@@ -149,16 +219,13 @@
             min-height: 150px;
             padding: 0;
             margin: 0;
+            color: var(--text-color);
         }
-
-        #story-text:focus {
-            outline: none;
-            box-shadow: none;
-        }
-
+        
+        #story-text:focus { outline: none; }
         #story-text.editing {
              border: 1px dashed var(--border-color);
-             background-color: var(--white-color);
+             background-color: var(--container-bg);
              padding: 10px;
              border-radius: 8px;
         }
@@ -168,21 +235,24 @@
             justify-content: center;
             gap: 15px;
             margin-top: 20px;
-            animation: fadeIn 0.5s;
         }
 
         .action-button {
-            background-color: var(--secondary-color);
-            background-image: linear-gradient(45deg, var(--secondary-color) 0%, #ff7675 100%);
+            background-color: var(--action-button-bg);
+            color: #333;
             padding: 10px 20px;
             font-size: 1em;
-            box-shadow: 0 4px 15px rgba(250, 177, 160, 0.4);
-            margin: 0;
+            font-weight: 700;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+            transition: all 0.3s ease;
         }
 
         .action-button:hover {
-            background-image: linear-gradient(45deg, #d63031 0%, #e17055 100%);
-            box-shadow: 0 6px 20px rgba(229, 115, 115, 0.5);
+            background-color: var(--action-button-hover-bg);
+            transform: translateY(-2px);
         }
         
         @keyframes slideIn {
@@ -190,93 +260,71 @@
             to { opacity: 1; transform: translateX(0); }
         }
 
-        .loader {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 1.2em;
-            color: var(--primary-color);
-        }
+        .loader { text-align: center; margin-top: 20px; font-size: 1.2em; color: var(--primary-color); }
+        .error { text-align: center; margin-top: 20px; padding: 15px; background-color: var(--error-bg); color: var(--error-text); border-radius: 10px; }
+        .hidden { display: none; }
+        .other-theme-input { margin-top: 10px; animation: fadeIn 0.3s; }
 
-        .error {
-            text-align: center;
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #ffeff0;
-            color: #d63031;
-            border-radius: 10px;
-            border: 1px solid var(--secondary-color);
-        }
-        
-        .hidden {
-            display: none;
-        }
-
-        .other-theme-input {
-            margin-top: 10px;
-            animation: fadeIn 0.3s;
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                padding: 30px 25px;
+            }
+            h1 { font-size: 2.2em; }
+            .theme-toggle { top: 10px; right: 10px; }
         }
     </style>
 <link rel="stylesheet" href="/index.css">
 </head>
 <body>
     <div id="root">
+        <button id="theme-toggle" class="theme-toggle">🌙</button>
         <div class="container">
-            <h1>Generador de Cuentos</h1>
+            <header>
+                <h1>Generador de Cuentos Mágicos ✨</h1>
+                <p class="subtitle">¡Vamos a crear una historia increíble!</p>
+            </header>
             <form id="story-form">
-                <div class="form-group">
-                    <label for="age">¿Para qué edad es el cuento?</label>
-                    <select id="age">
-                        <option value="3">3 años</option>
-                        <option value="4">4 años</option>
-                        <option value="5">5 años</option>
-                        <option value="6" selected>6 años</option>
-                        <option value="7">7 años</option>
-                        <option value="8">8 años</option>
-                        <option value="9">9 años</option>
-                        <option value="10">10 años</option>
-                        <option value="11">11 años</option>
-                        <option value="12">12 años</option>
-                        <option value="13">13 años</option>
-                        <option value="14">14 años</option>
-                        <option value="15">15 años</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="protagonists">Nombre del o los protagonistas</label>
-                    <input type="text" id="protagonists" placeholder="Ej: El valiente dragón Fuego" />
-                </div>
-                <div class="form-group">
-                    <label for="theme">Elige un tema</label>
-                    <select id="theme">
-                        <option value="Halloween">Halloween</option>
-                        <option value="Navidad">Navidad</option>
-                        <option value="Vacaciones">Vacaciones</option>
-                        <option value="Semana Santa">Semana Santa</option>
-                        <option value="Otro">Otro...</option>
-                    </select>
-                    <div id="other-theme-container" class="other-theme-input hidden">
-                         <input
-                            type="text"
-                            id="other-theme-input"
-                            placeholder="Escribe el tema que deseas"
-                        />
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="age">¿Para qué edad es el cuento?</label>
+                        <input type="text" id="age" placeholder="Ej: 3-5 años" />
+                    </div>
+                    <div class="form-group">
+                        <label for="protagonists">Nombre del/los protagonista(s)</label>
+                        <input type="text" id="protagonists" placeholder="Ej: La conejita Lola y el oso Pipo" />
+                    </div>
+                    <div class="form-group">
+                        <label for="theme">Elige un tema</label>
+                        <select id="theme">
+                            <option value="Aventura en el bosque">Aventura en el bosque</option>
+                            <option value="Un viaje espacial">Un viaje espacial</option>
+                            <option value="El misterio del juguete perdido">El misterio del juguete perdido</option>
+                            <option value="La fiesta de cumpleaños mágica">La fiesta de cumpleaños mágica</option>
+                            <option value="Superhéroes inesperados">Superhéroes inesperados</option>
+                            <option value="Otro">Otro...</option>
+                        </select>
+                        <div id="other-theme-container" class="other-theme-input hidden">
+                             <input type="text" id="other-theme-input" placeholder="Escribe tu propio tema"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="length">Extensión del cuento</label>
+                        <select id="length">
+                            <option value="muy corto">Muy corto</option>
+                            <option value="corto" selected>Corto</option>
+                            <option value="medio">Medio</option>
+                            <option value="largo">Largo</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="moral">¿Qué valor o enseñanza quieres incluir?</label>
+                        <input type="text" id="moral" placeholder="Ej: La importancia de compartir, la amistad, ser valiente..." />
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="length">Extensión del cuento</label>
-                    <select id="length">
-                        <option value="muy corto">Muy corto</option>
-                        <option value="corto" selected>Corto</option>
-                        <option value="medio">Medio</option>
-                        <option value="largo">Largo</option>
-                        <option value="muy largo">Muy largo</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="moral">¿Quieres incluir algún valor o moraleja?</label>
-                    <textarea id="moral" placeholder="Ej: La importancia de compartir"></textarea>
-                </div>
-                <button type="submit" id="submit-button">Crear Cuento</button>
+                <button type="submit" id="submit-button">Crear mi Cuento 🚀</button>
             </form>
 
             <div id="loader" class="loader hidden">✨ Generando tu historia... ✨</div>
@@ -284,10 +332,10 @@
             <div id="story-result" class="story-result hidden">
                 <h2>Aquí está tu cuento:</h2>
                 <textarea id="story-text" readonly></textarea>
-            </div>
-            <div id="action-buttons" class="action-buttons-container hidden">
-                <button id="edit-story-button" class="action-button">Editar Cuento</button>
-                <button id="download-pdf-button" class="action-button">Descargar PDF</button>
+                <div id="action-buttons" class="action-buttons-container">
+                    <button id="edit-story-button" class="action-button">Editar Cuento</button>
+                    <button id="download-pdf-button" class="action-button">Descargar PDF</button>
+                </div>
             </div>
         </div>
     </div>
@@ -308,8 +356,32 @@
         const actionButtons = document.getElementById('action-buttons');
         const editStoryButton = document.getElementById('edit-story-button');
         const downloadPdfButton = document.getElementById('download-pdf-button');
+        const themeToggleButton = document.getElementById('theme-toggle');
+
+        // --- Theme Toggler Logic ---
+        const applyTheme = (theme) => {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeToggleButton.textContent = '☀️';
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeToggleButton.textContent = '🌙';
+            }
+        };
+
+        themeToggleButton.addEventListener('click', () => {
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            const newTheme = isDarkMode ? 'light' : 'dark';
+            localStorage.setItem('storyGeneratorTheme', newTheme);
+            applyTheme(newTheme);
+        });
+        
+        // Apply saved theme on load
+        const savedTheme = localStorage.getItem('storyGeneratorTheme') || 'light';
+        applyTheme(savedTheme);
 
 
+        // --- Form Logic ---
         themeSelect.addEventListener('change', () => {
             if (themeSelect.value === 'Otro') {
                 otherThemeContainer.classList.remove('hidden');
@@ -323,18 +395,15 @@
         storyForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // 1. Reset UI
             errorContainer.classList.add('hidden');
             storyResultContainer.classList.add('hidden');
-            actionButtons.classList.add('hidden');
             storyText.readOnly = true;
             storyText.classList.remove('editing');
             editStoryButton.textContent = 'Editar Cuento';
             loader.classList.remove('hidden');
             submitButton.disabled = true;
-            submitButton.textContent = 'Creando magia...';
+            submitButton.innerHTML = 'Creando magia...';
 
-            // 2. Get form values
             const age = document.getElementById('age').value;
             const protagonists = document.getElementById('protagonists').value;
             const theme = themeSelect.value;
@@ -343,37 +412,36 @@
             const moral = document.getElementById('moral').value;
             
             const finalTheme = theme === 'Otro' ? otherTheme : theme;
-            if (!finalTheme) {
+            if (theme === 'Otro' && !finalTheme.trim()) {
                 errorContainer.textContent = 'Por favor, especifica un tema para el cuento.';
                 errorContainer.classList.remove('hidden');
                 loader.classList.add('hidden');
                 submitButton.disabled = false;
-                submitButton.textContent = 'Crear Cuento';
+                submitButton.innerHTML = 'Crear mi Cuento 🚀';
                 return;
             }
             
-            // 3. Create prompt
             const lengthMap = {
-                'muy corto': 'de aproximadamente 1 párrafo',
-                'corto': 'de aproximadamente 3 párrafos',
-                'medio': 'de aproximadamente 5 párrafos',
-                'largo': 'de aproximadamente 8 párrafos',
-                'muy largo': 'de más de 10 párrafos',
+                'muy corto': 'de 1 a 2 párrafos',
+                'corto': 'de 3 a 4 párrafos',
+                'medio': 'de 5 a 7 párrafos',
+                'largo': 'de 8 a 10 párrafos',
             };
 
-            let prompt = `Crea un cuento infantil para un niño o niña de ${age || 'cualquier'} edad.`;
+            let prompt = `Crea un cuento infantil para un niño o niña en el rango de edad de "${age || 'cualquier edad'}".`;
             if (protagonists) {
                 prompt += ` El/los protagonista(s) se llama(n) ${protagonists}.`;
             }
             prompt += ` El tema del cuento es "${finalTheme}".`;
             prompt += ` La extensión del cuento debe ser ${lengthMap[length]}.`;
             if (moral) {
-                prompt += ` El cuento debe incluir sutilmente la siguiente enseñanza o moraleja: "${moral}".`;
+                prompt += ` El cuento debe incluir sutilmente la siguiente enseñanza o valor: "${moral}".`;
             }
-            prompt += ` El tono debe ser amigable, positivo y adecuado para la edad indicada. Utiliza un lenguaje sencillo y claro.`;
+            prompt += ` El tono debe ser amigable, mágico, positivo y adecuado para la edad indicada. Utiliza un lenguaje sencillo y claro. Finaliza con una frase bonita y memorable.`;
 
-            // 4. Call Gemini API
             try {
+                // IMPORTANT: This will fail on static hosting like GitHub Pages
+                // as process.env.API_KEY is not available in the browser.
                 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
                 const response = await ai.models.generateContent({
                     model: 'gemini-2.5-flash',
@@ -381,27 +449,29 @@
                 });
                 storyText.value = response.text;
                 storyResultContainer.classList.remove('hidden');
-                actionButtons.classList.remove('hidden');
             } catch (err) {
                 console.error(err);
-                errorContainer.textContent = 'No se pudo generar el cuento. Por favor, inténtalo de nuevo.';
+                if (typeof process === 'undefined') {
+                     errorContainer.textContent = 'Error: La clave de API no está configurada. Esta aplicación no puede funcionar en un entorno de archivos estáticos (como GitHub Pages) sin una configuración de servidor o un proxy para proteger la clave.';
+                } else {
+                    errorContainer.textContent = 'No se pudo generar el cuento. Por favor, revisa la consola para más detalles.';
+                }
                 errorContainer.classList.remove('hidden');
             } finally {
-                // 5. Finalize UI
                 loader.classList.add('hidden');
                 submitButton.disabled = false;
-                submitButton.textContent = 'Crear Cuento';
+                submitButton.innerHTML = 'Crear mi Cuento 🚀';
             }
         });
         
         editStoryButton.addEventListener('click', () => {
             const isReadOnly = storyText.readOnly;
             storyText.readOnly = !isReadOnly;
-            if (isReadOnly) { // Was readonly, now editable
+            if (isReadOnly) {
                 editStoryButton.textContent = 'Guardar Cambios';
                 storyText.classList.add('editing');
                 storyText.focus();
-            } else { // Was editable, now readonly
+            } else {
                 editStoryButton.textContent = 'Editar Cuento';
                 storyText.classList.remove('editing');
             }
@@ -413,16 +483,19 @@
                 const doc = new jsPDF();
     
                 const storyContent = storyText.value;
-                const protagonists = document.getElementById('protagonists').value.trim() || 'Cuento Infantil';
+                const protagonists = document.getElementById('protagonists').value.trim() || 'Cuento Mágico';
                 const fileName = `${protagonists.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
     
                 const margin = 15;
                 const pageWidth = doc.internal.pageSize.getWidth();
                 const textWidth = pageWidth - margin * 2;
                 
+                doc.setFont('Nunito', 'bold');
                 doc.setFontSize(18);
-                doc.text(protagonists, pageWidth / 2, margin, { align: 'center' });
+                const title = protagonists;
+                doc.text(title, pageWidth / 2, margin, { align: 'center' });
     
+                doc.setFont('Nunito', 'normal');
                 doc.setFontSize(12);
                 const lines = doc.splitTextToSize(storyContent, textWidth);
                 doc.text(lines, margin, margin + 15);
@@ -430,11 +503,10 @@
                 doc.save(fileName);
             } catch(e) {
                 console.error("Error generating PDF:", e);
-                errorContainer.textContent = 'Hubo un error al generar el PDF. Por favor, inténtalo de nuevo.';
+                errorContainer.textContent = 'Hubo un error al generar el PDF.';
                 errorContainer.classList.remove('hidden');
             }
         });
-
     </script>
 <script type="module" src="/index.tsx"></script>
 </body>
