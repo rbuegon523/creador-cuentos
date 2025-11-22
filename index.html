@@ -48,17 +48,6 @@
 </head>
 <body class="bg-amber-50 min-h-screen text-gray-800">
 
-    <!-- ==================== PANTALLA API KEY ==================== -->
-    <div id="apiKeyModal" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
-            <h2 class="text-2xl font-bold text-cyan-600 mb-4">Configuración</h2>
-            <p class="text-gray-600 mb-4 text-sm">Para usar la IA de Gemini, necesitas una API Key gratuita.</p>
-            <input type="password" id="apiKeyInput" placeholder="Pega tu API Key aquí" class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-cyan-300 outline-none">
-            <button id="saveApiKeyBtn" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 rounded-full transition-transform transform hover:scale-105">Entrar</button>
-            <p class="mt-4 text-xs text-gray-400"><a href="https://aistudio.google.com/app/apikey" target="_blank" class="underline hover:text-cyan-500">Conseguir API Key aquí</a></p>
-        </div>
-    </div>
-
     <!-- ==================== TOAST NOTIFICACIÓN ==================== -->
     <div id="toast" class="fixed top-4 right-4 bg-white border-l-4 border-green-500 text-gray-700 px-6 py-4 rounded shadow-xl z-50 flex items-center hidden animate-fade-in-down">
         <svg class="h-8 w-8 text-green-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
@@ -294,9 +283,12 @@
     <script type="module">
         import { GoogleGenAI, Modality } from "@google/genai";
 
+        // --- CONFIGURACIÓN API KEY ---
+        // Inicialización directa usando la variable de entorno
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
         // --- ESTADO GLOBAL ---
         let state = {
-            apiKey: localStorage.getItem('gemini_api_key') || '',
             savedStories: [],
             currentStory: null,
             length: 'medio',
@@ -308,14 +300,10 @@
             readingTheme: 'light'
         };
 
-        let ai = null;
         let utterance = null;
 
         // --- REFERENCIAS DOM ---
         const els = {
-            apiKeyModal: document.getElementById('apiKeyModal'),
-            apiKeyInput: document.getElementById('apiKeyInput'),
-            saveApiKeyBtn: document.getElementById('saveApiKeyBtn'),
             mainContainer: document.getElementById('mainContainer'),
             storyForm: document.getElementById('storyForm'),
             loadingSection: document.getElementById('loadingSection'),
@@ -352,31 +340,6 @@
             fontSizeDisplay: document.getElementById('fontSizeDisplay'),
         };
 
-        // --- CONFIGURACIÓN API KEY ---
-        if (state.apiKey) {
-            els.apiKeyModal.classList.add('hidden');
-            initializeAI();
-        }
-
-        els.saveApiKeyBtn.addEventListener('click', () => {
-            const key = els.apiKeyInput.value.trim();
-            if (key) {
-                state.apiKey = key;
-                localStorage.setItem('gemini_api_key', key);
-                els.apiKeyModal.classList.add('hidden');
-                initializeAI();
-            }
-        });
-
-        function initializeAI() {
-            try {
-                ai = new GoogleGenAI({ apiKey: state.apiKey });
-                loadSavedStories();
-            } catch (e) {
-                console.error("Error init AI", e);
-            }
-        }
-
         // --- CONSTANTES & UTILIDADES ---
         const lengthMap = {
             'muy-corto': 'un cuento muy breve de 1 a 2 párrafos, ideal para antes de dormir.',
@@ -396,6 +359,8 @@
 
         // --- INICIALIZACIÓN UI ---
         function initUI() {
+            loadSavedStories();
+
             // Generar opciones de longitud
             els.lengthContainer.innerHTML = lengthOptions.map(opt => `
                 <label class="flex-1 text-center cursor-pointer p-2 rounded-md transition-all ${state.length === opt.id ? 'bg-cyan-500 text-white shadow' : 'bg-white hover:bg-cyan-50'} length-opt" data-id="${opt.id}">
