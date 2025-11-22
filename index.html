@@ -64,7 +64,7 @@
             <!-- Cabecera -->
             <div class="text-center mb-8">
                 <h1 class="text-4xl sm:text-5xl font-bold text-cyan-600">Creador de Cuentos</h1>
-                <p className="text-gray-500 mt-2 text-lg">¡Demos vida a una historia inolvidable!</p>
+                <p class="text-gray-500 mt-2 text-lg">¡Demos vida a una historia inolvidable!</p>
             </div>
 
             <!-- Spinner Loading -->
@@ -294,11 +294,14 @@
             // Ignorar error si process no está definido (Navegadores)
         }
 
-        // 2. Si prefieres "hardcodear" la clave para GitHub Pages (Opción Rápida), ponla aquí abajo.
-        // ADVERTENCIA: Tu clave será visible para cualquiera que vea el código fuente.
-        const MANUAL_API_KEY = ""; 
+        // 2. CONFIGURACIÓN MANUAL PARA GITHUB PAGES (SÓLO TOCA AQUÍ)
+        // =====================================================================
+        // PEGA TU CLAVE DENTRO DE LAS COMILLAS DE ABAJO.
+        // SOLO EN ESTE SITIO. NO NECESITAS EDITAR NADA MÁS.
+        // =====================================================================
+        const MANUAL_API_KEY = "AIzaSyC0GGv_GufP40VbXsq6RpOBoMuIh9gaxOQ"; 
 
-        if (!API_KEY && MANUAL_API_KEY) {
+        if (!API_KEY && MANUAL_API_KEY && MANUAL_API_KEY !== "PEGAR_TU_CLAVE_AQUI") {
             API_KEY = MANUAL_API_KEY;
         }
 
