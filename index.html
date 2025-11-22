@@ -16,14 +16,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
-    <!-- Google GenAI SDK (Import Map para módulos ES6) -->
+    <!-- Google GenAI SDK -->
     <script type="importmap">
 {
   "imports": {
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0"
+    "react/": "https://aistudiocdn.com/react@^19.2.0/"
   }
 }
 </script>
@@ -115,9 +115,8 @@
 
                 <div>
                     <label class="block text-lg font-semibold text-gray-700 mb-2">Extensión del cuento</label>
-                    <div class="flex flex-wrap gap-2 rounded-lg bg-gray-50 p-2 border border-gray-200" id="lengthContainer">
-                        <!-- Generado por JS -->
-                    </div>
+                    <!-- Contenedor importante que se llena con JS -->
+                    <div class="flex flex-wrap gap-2 rounded-lg bg-gray-50 p-2 border border-gray-200" id="lengthContainer"></div>
                 </div>
 
                 <div>
@@ -283,9 +282,48 @@
     <script type="module">
         import { GoogleGenAI, Modality } from "@google/genai";
 
-        // --- CONFIGURACIÓN API KEY ---
-        // Inicialización directa usando la variable de entorno
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        // --- CONFIGURACIÓN API KEY (Compatible con Navegador/GitHub Pages) ---
+        let API_KEY = null;
+
+        // 1. Intentar leer de process.env (solo funciona en builds locales/Node)
+        try {
+            if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+                API_KEY = process.env.API_KEY;
+            }
+        } catch (e) {
+            // Ignorar error si process no está definido (Navegadores)
+        }
+
+        // 2. Si prefieres "hardcodear" la clave para GitHub Pages (Opción Rápida), ponla aquí abajo.
+        // ADVERTENCIA: Tu clave será visible para cualquiera que vea el código fuente.
+        const MANUAL_API_KEY = ""; 
+
+        if (!API_KEY && MANUAL_API_KEY) {
+            API_KEY = MANUAL_API_KEY;
+        }
+
+        // 3. Si no hay clave hardcodeada, buscar en localStorage (Persistencia local)
+        if (!API_KEY) {
+            API_KEY = localStorage.getItem('gemini_api_key');
+        }
+
+        // 4. Si aún no tenemos clave, pedirla al usuario (una sola vez)
+        if (!API_KEY) {
+            const userKey = prompt("Para que la app funcione en esta página, necesitas tu API Key de Google Gemini. \n\nIntrodúcela aquí (se guardará en tu navegador):");
+            if (userKey) {
+                API_KEY = userKey.trim();
+                localStorage.setItem('gemini_api_key', API_KEY);
+                window.location.reload(); // Recargar para aplicar cambios limpiamente
+            }
+        }
+
+        // Inicializar AI Client solo si tenemos clave
+        let ai = null;
+        if (API_KEY) {
+            ai = new GoogleGenAI({ apiKey: API_KEY });
+        } else {
+            console.warn("No API Key provided. The app will not function correctly.");
+        }
 
         // --- ESTADO GLOBAL ---
         let state = {
@@ -313,7 +351,7 @@
             storiesList: document.getElementById('storiesList'),
             customThemeContainer: document.getElementById('customThemeContainer'),
             themeSelect: document.getElementById('theme'),
-            lengthContainer: document.getElementById('lengthContainer'),
+            lengthContainer: document.getElementById('lengthContainer'), // Importante: este es el contenedor de botones
             toast: document.getElementById('toast'),
             searchInput: document.getElementById('searchInput'),
             clearSearchBtn: document.getElementById('clearSearchBtn'),
@@ -359,11 +397,14 @@
 
         // --- INICIALIZACIÓN UI ---
         function initUI() {
+            // Asegurar que el DOM existe antes de pintar
+            if (!els.lengthContainer) return;
+
             loadSavedStories();
 
-            // Generar opciones de longitud
+            // Generar botones de longitud dinámicamente
             els.lengthContainer.innerHTML = lengthOptions.map(opt => `
-                <label class="flex-1 text-center cursor-pointer p-2 rounded-md transition-all ${state.length === opt.id ? 'bg-cyan-500 text-white shadow' : 'bg-white hover:bg-cyan-50'} length-opt" data-id="${opt.id}">
+                <label class="flex-1 text-center cursor-pointer p-2 rounded-md transition-all ${state.length === opt.id ? 'bg-cyan-500 text-white shadow' : 'bg-white hover:bg-cyan-50'} length-opt select-none" data-id="${opt.id}">
                     <input type="radio" name="length" value="${opt.id}" ${state.length === opt.id ? 'checked' : ''} class="sr-only">
                     ${opt.label}
                 </label>
@@ -376,44 +417,62 @@
                     document.querySelectorAll('.length-opt').forEach(opt => {
                         opt.classList.remove('bg-cyan-500', 'text-white', 'shadow');
                         opt.classList.add('bg-white');
+                        // Restaurar hover si es necesario en JS, aunque CSS lo maneja
                     });
-                    e.currentTarget.classList.remove('bg-white');
-                    e.currentTarget.classList.add('bg-cyan-500', 'text-white', 'shadow');
-                    state.length = e.currentTarget.dataset.id;
+                    // Aplicar estilos al seleccionado
+                    const target = e.currentTarget;
+                    target.classList.remove('bg-white');
+                    target.classList.add('bg-cyan-500', 'text-white', 'shadow');
+                    state.length = target.dataset.id;
+                    
+                    // Actualizar input radio subyacente
+                    const input = target.querySelector('input');
+                    if(input) input.checked = true;
                 });
             });
 
             // Theme toggle
-            els.themeSelect.addEventListener('change', (e) => {
-                if (e.target.value === 'Otro') {
-                    els.customThemeContainer.classList.remove('hidden');
-                } else {
-                    els.customThemeContainer.classList.add('hidden');
-                }
-            });
+            if (els.themeSelect) {
+                els.themeSelect.addEventListener('change', (e) => {
+                    if (e.target.value === 'Otro') {
+                        els.customThemeContainer.classList.remove('hidden');
+                    } else {
+                        els.customThemeContainer.classList.add('hidden');
+                    }
+                });
+            }
 
             // Search & Sort
-            els.searchInput.addEventListener('input', (e) => {
-                els.clearSearchBtn.classList.toggle('hidden', !e.target.value);
-                renderSavedStories();
-            });
-            els.clearSearchBtn.addEventListener('click', () => {
-                els.searchInput.value = '';
-                els.clearSearchBtn.classList.add('hidden');
-                renderSavedStories();
-            });
-            els.sortOrder.addEventListener('change', renderSavedStories);
+            if (els.searchInput) {
+                els.searchInput.addEventListener('input', (e) => {
+                    els.clearSearchBtn.classList.toggle('hidden', !e.target.value);
+                    renderSavedStories();
+                });
+                els.clearSearchBtn.addEventListener('click', () => {
+                    els.searchInput.value = '';
+                    els.clearSearchBtn.classList.add('hidden');
+                    renderSavedStories();
+                });
+            }
+            if (els.sortOrder) els.sortOrder.addEventListener('change', renderSavedStories);
 
             // Question Buttons
             document.querySelectorAll('.btn-question').forEach(btn => {
                 btn.addEventListener('click', () => handleGenerateQuestions(btn.dataset.level));
             });
         }
+
+        // Ejecutar inicialización cuando el script carga
         initUI();
 
         // --- LOGICA DE NEGOCIO ---
 
         async function generateStory(params) {
+            if (!ai) {
+                alert("No se ha configurado la API Key. Recarga la página e ingrésala.");
+                throw new Error("Falta API Key");
+            }
+
             const storyLengthInstruction = lengthMap[params.length] || lengthMap['medio'];
             const theme = params.theme === 'Otro' && params.customTheme ? params.customTheme : params.theme;
 
@@ -449,6 +508,7 @@
         }
 
         async function generateImage(prompt) {
+            if (!ai) return null;
             try {
                 const response = await ai.models.generateContent({
                     model: 'gemini-2.5-flash-image',
@@ -456,7 +516,6 @@
                     config: { responseModalities: [Modality.IMAGE] },
                 });
                 
-                // Iterar partes para encontrar la imagen
                 if (response.candidates && response.candidates[0]?.content?.parts) {
                     for (const part of response.candidates[0].content.parts) {
                          if (part.inlineData) return part.inlineData.data;
@@ -470,6 +529,7 @@
         }
 
         async function generateQuestionsAPI(storyText, difficulty) {
+            if (!ai) return [];
             const difficultyText = difficulty === 'easy' ? 'fácil (literal)' : difficulty === 'intermediate' ? 'intermedio (inferencial)' : 'difícil (crítico)';
             
             const prompt = `
@@ -493,6 +553,11 @@
         els.storyForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            if (!ai) {
+                alert("Falta la API Key. No se puede generar el cuento.");
+                return;
+            }
+
             // Switch UI
             els.storyForm.classList.add('hidden');
             els.savedStoriesSection.classList.add('hidden');
@@ -532,7 +597,7 @@
                 els.loadingSection.classList.add('hidden');
                 els.storyForm.classList.remove('hidden');
                 const errDiv = document.getElementById('formError');
-                errDiv.textContent = "Hubo un error al crear el cuento. Intenta de nuevo.";
+                errDiv.textContent = "Hubo un error al crear el cuento. Verifica tu conexión o tu API Key.";
                 errDiv.classList.remove('hidden');
             }
         });
@@ -551,9 +616,10 @@
             // Default select 'medio'
             const medio = document.querySelector('.length-opt[data-id="medio"]');
             if(medio) {
-                medio.click();
+                medio.click(); // Simular clic para activar estado y visuales
             }
             els.customThemeContainer.classList.add('hidden');
+            state.length = 'medio';
         }
 
         function resetToHome() {
@@ -564,7 +630,7 @@
             els.mainContainer.classList.remove('hidden');
             els.storyForm.classList.remove('hidden');
             els.loadingSection.classList.add('hidden');
-            els.savedStoriesSection.classList.remove('hidden'); // Show Saved list again
+            els.savedStoriesSection.classList.remove('hidden');
         }
 
         // --- STORAGE ---
@@ -693,6 +759,10 @@
 
         async function handleGenerateQuestions(difficulty) {
             if (!state.currentStory) return;
+            if (!ai) {
+                alert("API Key no configurada.");
+                return;
+            }
 
             els.questionsLoading.classList.remove('hidden');
             els.questionsControls.classList.add('hidden');
@@ -798,7 +868,6 @@
                 let heightLeft = canvas.height;
                 let y = 0;
                 const pageHeight = pdfHeight - 20;
-                // Simplificado para una sola página o ajuste básico
                 pdf.addImage(imgData, 'PNG', 10, position, width, height);
             }
             
