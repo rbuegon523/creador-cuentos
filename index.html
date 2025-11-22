@@ -1,512 +1,938 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Cuentos Mágicos</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Creador de Cuentos Mágicos</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>" />
+    
+    <!-- Estilos y Fuentes -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Librerías para PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- Google GenAI SDK (Import Map para módulos ES6) -->
+    <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0"
+  }
+}
+</script>
+
     <style>
-        :root {
-            --bg-color: #f0f8ff;
-            --container-bg: #ffffff;
-            --text-color: #333;
-            --label-color: #555;
-            --border-color: #e0e0e0;
-            --primary-color: #007bff;
-            --primary-text: #ffffff;
-            --button-bg: #28a745;
-            --button-text: #ffffff;
-            --button-hover-bg: #218838;
-            --shadow-color: rgba(0, 123, 255, 0.1);
-            --title-color: #0056b3;
-            --subtitle-color: #6c757d;
-            --error-bg: #f8d7da;
-            --error-text: #721c24;
-            --story-bg: #e9f7ef;
-            --story-border: #28a745;
-            --action-button-bg: #ffc107;
-            --action-button-hover-bg: #e0a800;
-        }
-
-        body.dark-mode {
-            --bg-color: #121212;
-            --container-bg: #1e1e1e;
-            --text-color: #e0e0e0;
-            --label-color: #bbbbbb;
-            --border-color: #444;
-            --primary-color: #3a9cff;
-            --shadow-color: rgba(58, 156, 255, 0.1);
-            --title-color: #6ab7ff;
-            --subtitle-color: #999;
-            --error-bg: #2c1a1d;
-            --error-text: #f8d7da;
-            --story-bg: #232a25;
-            --story-border: #28a745;
-            --action-button-bg: #ffc107;
-            --action-button-hover-bg: #e0a800;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Nunito', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        #root {
-            width: 100%;
-            max-width: 800px;
-            position: relative;
-        }
-
-        .theme-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: none;
-            border: 1px solid var(--border-color);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            font-size: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: var(--label-color);
-            transition: background-color 0.3s, color 0.3s;
-        }
-        
-        .theme-toggle:hover {
-            background-color: rgba(128,128,128,0.1);
-        }
-
-        .container {
-            background-color: var(--container-bg);
-            padding: 40px 50px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px var(--shadow-color);
-            animation: fadeIn 0.5s ease-in-out;
-            border: 1px solid var(--border-color);
-            width: 100%;
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        h1 {
-            color: var(--title-color);
-            font-size: 2.8em;
-            font-weight: 800;
-        }
-        
-        .subtitle {
-            color: var(--subtitle-color);
-            font-size: 1.2em;
-            margin-top: 5px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px 30px;
-            margin-bottom: 20px;
-        }
-        
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .full-width {
-            grid-column: 1 / -1;
-        }
-
-        label {
-            margin-bottom: 8px;
-            font-weight: 700;
-            font-size: 1em;
-            color: var(--label-color);
-        }
-
-        input[type="text"],
-        select {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            box-sizing: border-box;
-            font-size: 1em;
-            font-family: 'Nunito', sans-serif;
-            background-color: var(--container-bg);
-            color: var(--text-color);
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-        
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 8px rgba(0, 123, 255, 0.25);
-        }
-        
-        button#submit-button {
-            background-color: #34d399;
-            color: var(--button-text);
-            padding: 15px 30px;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-size: 1.2em;
-            font-weight: 700;
-            display: block;
-            margin: 40px auto 0;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(52, 211, 153, 0.3);
-        }
-
-        button#submit-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(52, 211, 153, 0.4);
-            background-color: #10b981;
-        }
-        
-        button:disabled {
-            background: #9ca3af !important;
-            cursor: not-allowed;
-            transform: translateY(0) !important;
-            box-shadow: none !important;
-        }
-
-        .story-result {
-            margin-top: 30px;
-            padding: 25px;
-            background-color: var(--story-bg);
-            border-left: 6px solid var(--story-border);
-            border-radius: 10px;
-            animation: slideIn 0.5s ease-out;
-        }
-
-        #story-text {
-            white-space: pre-wrap;
-            line-height: 1.7;
-            font-size: 1.1em;
-            width: 100%;
-            box-sizing: border-box;
-            border: none;
-            background-color: transparent;
-            resize: vertical;
-            min-height: 150px;
-            padding: 0;
-            margin: 0;
-            color: var(--text-color);
-        }
-        
-        #story-text:focus { outline: none; }
-        #story-text.editing {
-             border: 1px dashed var(--border-color);
-             background-color: var(--container-bg);
-             padding: 10px;
-             border-radius: 8px;
-        }
-        
-        .action-buttons-container {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .action-button {
-            background-color: var(--action-button-bg);
-            color: #333;
-            padding: 10px 20px;
-            font-size: 1em;
-            font-weight: 700;
-            border-radius: 50px;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .action-button:hover {
-            background-color: var(--action-button-hover-bg);
-            transform: translateY(-2px);
-        }
-        
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        .loader { text-align: center; margin-top: 20px; font-size: 1.2em; color: var(--primary-color); }
-        .error { text-align: center; margin-top: 20px; padding: 15px; background-color: var(--error-bg); color: var(--error-text); border-radius: 10px; }
-        .hidden { display: none; }
-        .other-theme-input { margin-top: 10px; animation: fadeIn 0.3s; }
-
-        @media (max-width: 600px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            .container {
-                padding: 30px 25px;
-            }
-            h1 { font-size: 2.2em; }
-            .theme-toggle { top: 10px; right: 10px; }
-        }
+      body { font-family: 'Baloo 2', cursive; }
+      .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #ccebed; border-radius: 4px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a5f3fc; }
+      
+      /* Animaciones */
+      @keyframes fadeInDown {
+        from { opacity: 0; transform: translate3d(0, -20px, 0); }
+        to { opacity: 1; transform: translate3d(0, 0, 0); }
+      }
+      .animate-fade-in-down { animation: fadeInDown 0.5s ease-out; }
+      
+      .hidden { display: none !important; }
     </style>
 <link rel="stylesheet" href="/index.css">
 </head>
-<body>
-    <div id="root">
-        <button id="theme-toggle" class="theme-toggle">🌙</button>
-        <div class="container">
-            <header>
-                <h1>Generador de Cuentos Mágicos ✨</h1>
-                <p class="subtitle">¡Vamos a crear una historia increíble!</p>
-            </header>
-            <form id="story-form">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="age">¿Para qué edad es el cuento?</label>
-                        <input type="text" id="age" placeholder="Ej: 3-5 años" />
+<body class="bg-amber-50 min-h-screen text-gray-800">
+
+    <!-- ==================== PANTALLA API KEY ==================== -->
+    <div id="apiKeyModal" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
+            <h2 class="text-2xl font-bold text-cyan-600 mb-4">Configuración</h2>
+            <p class="text-gray-600 mb-4 text-sm">Para usar la IA de Gemini, necesitas una API Key gratuita.</p>
+            <input type="password" id="apiKeyInput" placeholder="Pega tu API Key aquí" class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-cyan-300 outline-none">
+            <button id="saveApiKeyBtn" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 rounded-full transition-transform transform hover:scale-105">Entrar</button>
+            <p class="mt-4 text-xs text-gray-400"><a href="https://aistudio.google.com/app/apikey" target="_blank" class="underline hover:text-cyan-500">Conseguir API Key aquí</a></p>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST NOTIFICACIÓN ==================== -->
+    <div id="toast" class="fixed top-4 right-4 bg-white border-l-4 border-green-500 text-gray-700 px-6 py-4 rounded shadow-xl z-50 flex items-center hidden animate-fade-in-down">
+        <svg class="h-8 w-8 text-green-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+        <div class="ml-3">
+            <p class="font-bold text-green-600">¡Cuento Guardado!</p>
+            <p class="text-sm">Se ha añadido a "Mis Cuentos Guardados".</p>
+        </div>
+    </div>
+
+    <!-- ==================== CONTENEDOR PRINCIPAL ==================== -->
+    <div id="mainContainer" class="min-h-screen p-4 sm:p-8 flex items-center justify-center">
+        <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-6 sm:p-10 relative">
+            
+            <!-- Cabecera -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl sm:text-5xl font-bold text-cyan-600">Creador de Cuentos</h1>
+                <p className="text-gray-500 mt-2 text-lg">¡Demos vida a una historia inolvidable!</p>
+            </div>
+
+            <!-- Spinner Loading -->
+            <div id="loadingSection" class="hidden flex-col items-center justify-center space-y-4 py-10">
+                <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-cyan-500"></div>
+                <p id="loadingMessage" class="text-lg text-cyan-600 font-semibold">Escribiendo tu aventura...</p>
+            </div>
+
+            <!-- Formulario -->
+            <form id="storyForm" class="space-y-6">
+                <div id="formError" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md"></div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="age" class="block text-lg font-semibold text-gray-700 mb-2">¿Para qué edad es el cuento?</label>
+                        <input type="text" id="age" class="w-full p-3 border border-gray-200 bg-gray-50 rounded-lg focus:ring-2 focus:ring-cyan-300 transition-all" required>
                     </div>
-                    <div class="form-group">
-                        <label for="protagonists">Nombre del/los protagonista(s)</label>
-                        <input type="text" id="protagonists" placeholder="Ej: La conejita Lola y el oso Pipo" />
-                    </div>
-                    <div class="form-group">
-                        <label for="theme">Elige un tema</label>
-                        <select id="theme">
-                            <option value="Aventura en el bosque">Aventura en el bosque</option>
-                            <option value="Un viaje espacial">Un viaje espacial</option>
-                            <option value="El misterio del juguete perdido">El misterio del juguete perdido</option>
-                            <option value="La fiesta de cumpleaños mágica">La fiesta de cumpleaños mágica</option>
-                            <option value="Superhéroes inesperados">Superhéroes inesperados</option>
-                            <option value="Otro">Otro...</option>
-                        </select>
-                        <div id="other-theme-container" class="other-theme-input hidden">
-                             <input type="text" id="other-theme-input" placeholder="Escribe tu propio tema"/>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="length">Extensión del cuento</label>
-                        <select id="length">
-                            <option value="muy corto">Muy corto</option>
-                            <option value="corto" selected>Corto</option>
-                            <option value="medio">Medio</option>
-                            <option value="largo">Largo</option>
-                        </select>
-                    </div>
-                    <div class="form-group full-width">
-                        <label for="moral">¿Qué valor o enseñanza quieres incluir?</label>
-                        <input type="text" id="moral" placeholder="Ej: La importancia de compartir, la amistad, ser valiente..." />
+                    <div>
+                        <label for="protagonist" class="block text-lg font-semibold text-gray-700 mb-2">Nombre del protagonista</label>
+                        <input type="text" id="protagonist" placeholder="Por ej. Leo el león valiente" class="w-full p-3 border border-gray-200 bg-gray-50 rounded-lg focus:ring-2 focus:ring-cyan-300 transition-all">
                     </div>
                 </div>
-                <button type="submit" id="submit-button">Crear mi Cuento 🚀</button>
+
+                <div>
+                    <label for="theme" class="block text-lg font-semibold text-gray-700 mb-2">Elige un tema</label>
+                    <select id="theme" class="w-full p-3 border border-gray-200 bg-gray-50 rounded-lg focus:ring-2 focus:ring-cyan-300 transition-all" required>
+                        <option value="" disabled selected>Propón un tema</option>
+                        <option value="Halloween">Halloween</option>
+                        <option value="Navidad">Navidad</option>
+                        <option value="Vacaciones">Vacaciones</option>
+                        <option value="Semana Santa">Semana Santa</option>
+                        <option value="Día de la Paz">Día de la Paz</option>
+                        <option value="Día contra la Violencia de Género">Día contra la Violencia de Género</option>
+                        <option value="Día de la Familia">Día de la Familia</option>
+                        <option value="Día del Libro">Día del Libro</option>
+                        <option value="Día de la Tierra">Día de la Tierra</option>
+                        <option value="Día de la Madre">Día de la Madre</option>
+                        <option value="Día del Padre">Día del Padre</option>
+                        <option value="Vuelta al Cole">Vuelta al Cole</option>
+                        <option value="Carnaval">Carnaval</option>
+                        <option value="Otro">Otro...</option>
+                    </select>
+                    <div id="customThemeContainer" class="mt-4 hidden">
+                        <label for="customTheme" class="block text-lg font-semibold text-gray-700 mb-2">¿Sobre qué tema?</label>
+                        <input type="text" id="customTheme" placeholder="Ej: Dinosaurios, el espacio..." class="w-full p-3 border border-gray-200 bg-gray-50 rounded-lg focus:ring-2 focus:ring-cyan-300 transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-lg font-semibold text-gray-700 mb-2">Extensión del cuento</label>
+                    <div class="flex flex-wrap gap-2 rounded-lg bg-gray-50 p-2 border border-gray-200" id="lengthContainer">
+                        <!-- Generado por JS -->
+                    </div>
+                </div>
+
+                <div>
+                    <label for="moral" class="block text-lg font-semibold text-gray-700 mb-2">¿Qué valor o enseñanza quieres incluir?</label>
+                    <textarea id="moral" rows="3" placeholder="Ej: La importancia de compartir, ser amable..." class="w-full p-3 border border-gray-200 bg-gray-50 rounded-lg focus:ring-2 focus:ring-cyan-300 transition-all"></textarea>
+                </div>
+
+                <div class="flex gap-4 pt-2">
+                    <button type="button" id="btnClean" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-4 px-6 rounded-full shadow-sm transform hover:scale-105 transition-transform duration-300 ease-in-out flex items-center justify-center text-lg">Limpiar</button>
+                    <button type="submit" class="flex-[2] bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-4 px-6 rounded-full shadow-md transform hover:scale-105 transition-transform duration-300 ease-in-out flex items-center justify-center text-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                        </svg>
+                        ¡Crear mi cuento!
+                    </button>
+                </div>
             </form>
 
-            <div id="loader" class="loader hidden">✨ Generando tu historia... ✨</div>
-            <div id="error" class="error hidden"></div>
-            <div id="story-result" class="story-result hidden">
-                <h2>Aquí está tu cuento:</h2>
-                <textarea id="story-text" readonly></textarea>
-                <div id="action-buttons" class="action-buttons-container">
-                    <button id="edit-story-button" class="action-button">Editar Cuento</button>
-                    <button id="download-pdf-button" class="action-button">Descargar PDF</button>
+            <!-- Lista de Cuentos Guardados -->
+            <div id="savedStoriesSection" class="mt-12 pt-8 border-t border-gray-100 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+                    <h2 class="text-2xl font-bold text-cyan-600">Mis Cuentos Guardados</h2>
+                    <div class="flex items-center gap-2">
+                        <select id="sortOrder" class="p-2 border border-gray-200 rounded-lg bg-gray-50 text-sm focus:ring-cyan-300">
+                            <option value="newest">Más recientes</option>
+                            <option value="oldest">Más antiguos</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="relative mb-6 group">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    </div>
+                    <input type="text" id="searchInput" placeholder="Buscar por título..." class="pl-10 pr-10 w-full p-3 border border-gray-200 rounded-full bg-gray-50 focus:ring-2 focus:ring-cyan-300 focus:bg-white transition-all shadow-sm">
+                    <button id="clearSearchBtn" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
+                        <div class="bg-gray-200 rounded-full p-0.5"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></div>
+                    </button>
+                </div>
+
+                <div id="storiesList" class="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                    <!-- Cuentos aquí -->
                 </div>
             </div>
         </div>
     </div>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- ==================== VISTA DEL CUENTO (RESULTADO) ==================== -->
+    <div id="resultContainer" class="hidden min-h-screen p-4 sm:p-8 flex flex-col items-center bg-amber-50 relative">
+        <div class="w-full max-w-3xl bg-white rounded-2xl shadow-xl p-6 sm:p-10">
+            
+            <!-- Área imprimible -->
+            <div id="storyContentArea" class="bg-white p-4">
+                <h1 id="resultTitle" class="text-3xl sm:text-4xl font-bold text-center text-cyan-600 mb-6"></h1>
+                <img id="resultImage" class="rounded-xl shadow-lg w-full object-cover mb-6 hidden" alt="Ilustración">
+                <div id="resultText" class="prose prose-lg max-w-none text-gray-700 whitespace-pre-wrap leading-relaxed text-left"></div>
+
+                <!-- Sección Preguntas -->
+                <div class="mt-8 pt-6 border-t border-gray-200 no-print">
+                    <h3 class="text-xl font-bold text-cyan-700 mb-4 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                        Preguntas de Comprensión
+                    </h3>
+                    <div class="bg-cyan-50 p-6 rounded-xl border border-cyan-100">
+                        <ul id="questionsList" class="hidden list-disc list-inside space-y-2 text-gray-700 mb-6 bg-white p-4 rounded-lg border border-cyan-100 shadow-sm"></ul>
+                        
+                        <div id="questionsLoading" class="hidden flex items-center justify-center py-4">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div>
+                            <span class="ml-3 text-cyan-700 font-medium">Generando preguntas...</span>
+                        </div>
+
+                        <div id="questionsControls">
+                            <p id="questionsPrompt" class="text-gray-600 mb-4">¿Quieres profundizar en la historia? Genera preguntas automáticas:</p>
+                            <div class="flex flex-wrap gap-3 justify-center sm:justify-start">
+                                <button class="btn-question px-4 py-2 rounded-full text-sm font-bold bg-white text-cyan-700 border border-cyan-200 hover:bg-cyan-100 transition-all shadow-sm" data-level="easy">Fáciles</button>
+                                <button class="btn-question px-4 py-2 rounded-full text-sm font-bold bg-white text-cyan-700 border border-cyan-200 hover:bg-cyan-100 transition-all shadow-sm" data-level="intermediate">Intermedias</button>
+                                <button class="btn-question px-4 py-2 rounded-full text-sm font-bold bg-white text-cyan-700 border border-cyan-200 hover:bg-cyan-100 transition-all shadow-sm" data-level="hard">Difíciles</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controles TTS -->
+            <div class="bg-gray-100 rounded-lg p-4 my-6 flex flex-col sm:flex-row items-center gap-4 no-print">
+                <label for="voiceSelect" class="font-semibold text-gray-700">Narrador:</label>
+                <select id="voiceSelect" class="flex-grow p-2 border border-gray-200 rounded-lg bg-white"></select>
+                <div class="flex items-center gap-2">
+                    <button id="btnPlayPause" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                        <!-- Icono Play -->
+                        <svg id="iconPlay" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <!-- Icono Pause (oculto) -->
+                        <svg id="iconPause" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </button>
+                    <button id="btnStop" class="p-2 rounded-full hover:bg-gray-200 transition-colors" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h6v6H9z" /></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="flex flex-col sm:flex-row gap-4 mt-8 flex-wrap justify-center no-print">
+                <button id="btnReadingMode" class="w-full sm:w-auto bg-cyan-100 hover:bg-cyan-200 text-cyan-900 font-bold py-3 px-6 rounded-full shadow-md transform hover:scale-105 transition-transform duration-300 ease-in-out flex items-center justify-center text-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                    Modo Lectura
+                </button>
+                <button id="btnCreateAnother" class="w-full sm:w-auto bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-full shadow-md transform hover:scale-105 transition-transform duration-300 ease-in-out flex items-center justify-center text-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>
+                    Volver a Crear
+                </button>
+                <button id="btnShare" class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-full shadow-md transform hover:scale-105 transition-transform duration-300 ease-in-out flex items-center justify-center text-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12s-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.368a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" /></svg>
+                    <span id="shareText">Compartir</span>
+                </button>
+                <button id="btnPdf" class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-full shadow-md transform hover:scale-105 transition-transform duration-300 ease-in-out flex items-center justify-center text-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODO LECTURA (OVERLAY) ==================== -->
+    <div id="readingModeOverlay" class="fixed inset-0 z-50 overflow-y-auto bg-white text-gray-800 transition-colors duration-300 hidden">
+        <!-- Toolbar -->
+        <div class="sticky top-0 left-0 right-0 p-4 flex justify-between items-center border-b border-opacity-20 border-current backdrop-blur-sm bg-opacity-90 shadow-sm z-10">
+            <div class="flex items-center gap-4">
+                <button id="btnCloseReading" class="p-2 hover:opacity-70 rounded-full hover:bg-black hover:bg-opacity-5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+                <span class="text-lg font-semibold hidden sm:inline">Modo Lectura</span>
+            </div>
+            <div class="flex items-center gap-4 sm:gap-6">
+                <div class="flex items-center gap-1 sm:gap-2 border border-current border-opacity-30 rounded-full px-2 py-1">
+                    <button id="btnDecreaseFont" class="p-1 hover:opacity-70"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg></button>
+                    <span id="fontSizeDisplay" class="text-sm min-w-[2ch] text-center font-mono">20</span>
+                    <button id="btnIncreaseFont" class="p-1 hover:opacity-70"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg></button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button class="theme-btn p-2 rounded-full border border-transparent hover:bg-black hover:bg-opacity-5" data-theme="light" title="Claro"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg></button>
+                    <button class="theme-btn p-2 rounded-full border border-transparent hover:bg-black hover:bg-opacity-5" data-theme="sepia" title="Sepia"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 1v3M10 1v3M14 1v3" /></svg></button>
+                    <button class="theme-btn p-2 rounded-full border border-transparent hover:bg-black hover:bg-opacity-5" data-theme="dark" title="Oscuro"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenido Lectura -->
+        <div class="max-w-3xl mx-auto p-6 sm:p-8 pb-32">
+            <h1 id="readingTitle" class="text-4xl md:text-5xl font-bold mb-8 text-center leading-tight"></h1>
+            <div id="readingImageContainer" class="flex justify-center mb-10 hidden">
+                <img id="readingImage" class="rounded-xl shadow-md max-h-96 w-auto object-cover">
+            </div>
+            <div id="readingText" class="leading-loose max-w-none whitespace-pre-wrap font-medium transition-all" style="font-size: 20px;"></div>
+            
+            <div id="readingQuestionsSection" class="mt-16 pt-8 border-t border-current border-opacity-20 hidden">
+                <h3 class="text-2xl font-bold opacity-90 mb-6">Preguntas de Comprensión</h3>
+                <ul id="readingQuestionsList" class="list-decimal list-inside space-y-4 opacity-90"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lógica de la Aplicación -->
     <script type="module">
-        import { GoogleGenAI } from "https://aistudiocdn.com/@google/genai@^1.29.1";
+        import { GoogleGenAI, Modality } from "@google/genai";
 
-        const storyForm = document.getElementById('story-form');
-        const submitButton = document.getElementById('submit-button');
-        const loader = document.getElementById('loader');
-        const errorContainer = document.getElementById('error');
-        const storyResultContainer = document.getElementById('story-result');
-        const storyText = document.getElementById('story-text');
-        const themeSelect = document.getElementById('theme');
-        const otherThemeContainer = document.getElementById('other-theme-container');
-        const otherThemeInput = document.getElementById('other-theme-input');
-        const actionButtons = document.getElementById('action-buttons');
-        const editStoryButton = document.getElementById('edit-story-button');
-        const downloadPdfButton = document.getElementById('download-pdf-button');
-        const themeToggleButton = document.getElementById('theme-toggle');
-
-        // --- Theme Toggler Logic ---
-        const applyTheme = (theme) => {
-            if (theme === 'dark') {
-                document.body.classList.add('dark-mode');
-                themeToggleButton.textContent = '☀️';
-            } else {
-                document.body.classList.remove('dark-mode');
-                themeToggleButton.textContent = '🌙';
-            }
+        // --- ESTADO GLOBAL ---
+        let state = {
+            apiKey: localStorage.getItem('gemini_api_key') || '',
+            savedStories: [],
+            currentStory: null,
+            length: 'medio',
+            voices: [],
+            selectedVoice: null,
+            isSpeaking: false,
+            isPaused: false,
+            readingFontSize: 20,
+            readingTheme: 'light'
         };
 
-        themeToggleButton.addEventListener('click', () => {
-            const isDarkMode = document.body.classList.contains('dark-mode');
-            const newTheme = isDarkMode ? 'light' : 'dark';
-            localStorage.setItem('storyGeneratorTheme', newTheme);
-            applyTheme(newTheme);
-        });
-        
-        // Apply saved theme on load
-        const savedTheme = localStorage.getItem('storyGeneratorTheme') || 'light';
-        applyTheme(savedTheme);
+        let ai = null;
+        let utterance = null;
 
+        // --- REFERENCIAS DOM ---
+        const els = {
+            apiKeyModal: document.getElementById('apiKeyModal'),
+            apiKeyInput: document.getElementById('apiKeyInput'),
+            saveApiKeyBtn: document.getElementById('saveApiKeyBtn'),
+            mainContainer: document.getElementById('mainContainer'),
+            storyForm: document.getElementById('storyForm'),
+            loadingSection: document.getElementById('loadingSection'),
+            loadingMessage: document.getElementById('loadingMessage'),
+            resultContainer: document.getElementById('resultContainer'),
+            savedStoriesSection: document.getElementById('savedStoriesSection'),
+            storiesList: document.getElementById('storiesList'),
+            customThemeContainer: document.getElementById('customThemeContainer'),
+            themeSelect: document.getElementById('theme'),
+            lengthContainer: document.getElementById('lengthContainer'),
+            toast: document.getElementById('toast'),
+            searchInput: document.getElementById('searchInput'),
+            clearSearchBtn: document.getElementById('clearSearchBtn'),
+            sortOrder: document.getElementById('sortOrder'),
+            voiceSelect: document.getElementById('voiceSelect'),
+            
+            // Result Views
+            resultTitle: document.getElementById('resultTitle'),
+            resultText: document.getElementById('resultText'),
+            resultImage: document.getElementById('resultImage'),
+            questionsList: document.getElementById('questionsList'),
+            questionsLoading: document.getElementById('questionsLoading'),
+            questionsControls: document.getElementById('questionsControls'),
+            questionsPrompt: document.getElementById('questionsPrompt'),
 
-        // --- Form Logic ---
-        themeSelect.addEventListener('change', () => {
-            if (themeSelect.value === 'Otro') {
-                otherThemeContainer.classList.remove('hidden');
-                otherThemeInput.required = true;
-            } else {
-                otherThemeContainer.classList.add('hidden');
-                otherThemeInput.required = false;
+            // Reading Mode
+            readingModeOverlay: document.getElementById('readingModeOverlay'),
+            readingTitle: document.getElementById('readingTitle'),
+            readingText: document.getElementById('readingText'),
+            readingImage: document.getElementById('readingImage'),
+            readingImageContainer: document.getElementById('readingImageContainer'),
+            readingQuestionsList: document.getElementById('readingQuestionsList'),
+            readingQuestionsSection: document.getElementById('readingQuestionsSection'),
+            fontSizeDisplay: document.getElementById('fontSizeDisplay'),
+        };
+
+        // --- CONFIGURACIÓN API KEY ---
+        if (state.apiKey) {
+            els.apiKeyModal.classList.add('hidden');
+            initializeAI();
+        }
+
+        els.saveApiKeyBtn.addEventListener('click', () => {
+            const key = els.apiKeyInput.value.trim();
+            if (key) {
+                state.apiKey = key;
+                localStorage.setItem('gemini_api_key', key);
+                els.apiKeyModal.classList.add('hidden');
+                initializeAI();
             }
         });
 
-        storyForm.addEventListener('submit', async (e) => {
+        function initializeAI() {
+            try {
+                ai = new GoogleGenAI({ apiKey: state.apiKey });
+                loadSavedStories();
+            } catch (e) {
+                console.error("Error init AI", e);
+            }
+        }
+
+        // --- CONSTANTES & UTILIDADES ---
+        const lengthMap = {
+            'muy-corto': 'un cuento muy breve de 1 a 2 párrafos, ideal para antes de dormir.',
+            'corto': 'un cuento corto de 3 a 4 párrafos.',
+            'medio': 'un cuento de longitud media, de unas 500 palabras, con un desarrollo claro.',
+            'largo': 'un cuento largo y detallado de unas 700-800 palabras, con varios eventos.',
+            'muy-largo': 'un cuento muy largo y elaborado, de más de 1000 palabras, perfecto para leer por capítulos.',
+        };
+
+        const lengthOptions = [
+            {id: 'muy-corto', label: 'Muy Corto'},
+            {id: 'corto', label: 'Corto'},
+            {id: 'medio', label: 'Medio'},
+            {id: 'largo', label: 'Largo'},
+            {id: 'muy-largo', label: 'Muy Largo'}
+        ];
+
+        // --- INICIALIZACIÓN UI ---
+        function initUI() {
+            // Generar opciones de longitud
+            els.lengthContainer.innerHTML = lengthOptions.map(opt => `
+                <label class="flex-1 text-center cursor-pointer p-2 rounded-md transition-all ${state.length === opt.id ? 'bg-cyan-500 text-white shadow' : 'bg-white hover:bg-cyan-50'} length-opt" data-id="${opt.id}">
+                    <input type="radio" name="length" value="${opt.id}" ${state.length === opt.id ? 'checked' : ''} class="sr-only">
+                    ${opt.label}
+                </label>
+            `).join('');
+
+            // Event Listeners para longitud
+            document.querySelectorAll('.length-opt').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    // UI update
+                    document.querySelectorAll('.length-opt').forEach(opt => {
+                        opt.classList.remove('bg-cyan-500', 'text-white', 'shadow');
+                        opt.classList.add('bg-white');
+                    });
+                    e.currentTarget.classList.remove('bg-white');
+                    e.currentTarget.classList.add('bg-cyan-500', 'text-white', 'shadow');
+                    state.length = e.currentTarget.dataset.id;
+                });
+            });
+
+            // Theme toggle
+            els.themeSelect.addEventListener('change', (e) => {
+                if (e.target.value === 'Otro') {
+                    els.customThemeContainer.classList.remove('hidden');
+                } else {
+                    els.customThemeContainer.classList.add('hidden');
+                }
+            });
+
+            // Search & Sort
+            els.searchInput.addEventListener('input', (e) => {
+                els.clearSearchBtn.classList.toggle('hidden', !e.target.value);
+                renderSavedStories();
+            });
+            els.clearSearchBtn.addEventListener('click', () => {
+                els.searchInput.value = '';
+                els.clearSearchBtn.classList.add('hidden');
+                renderSavedStories();
+            });
+            els.sortOrder.addEventListener('change', renderSavedStories);
+
+            // Question Buttons
+            document.querySelectorAll('.btn-question').forEach(btn => {
+                btn.addEventListener('click', () => handleGenerateQuestions(btn.dataset.level));
+            });
+        }
+        initUI();
+
+        // --- LOGICA DE NEGOCIO ---
+
+        async function generateStory(params) {
+            const storyLengthInstruction = lengthMap[params.length] || lengthMap['medio'];
+            const theme = params.theme === 'Otro' && params.customTheme ? params.customTheme : params.theme;
+
+            const prompt = `
+                Eres un escritor experto en cuentos infantiles y un director de arte. Tu estilo es tierno, imaginativo, positivo y muy fácil de entender para los niños. Tu misión es crear un cuento maravilloso y la descripción para una ilustración.
+
+                Por favor, crea un cuento con las siguientes características:
+                1.  **Público Objetivo**: Niños de ${params.age} años. Adapta el lenguaje, la complejidad y los conceptos a esta edad.
+                2.  **Protagonista(s)**: El personaje principal (o personajes) se llama ${params.protagonist || 'un personaje muy especial'}. Dale vida y una personalidad entrañable.
+                3.  **Tema Central**: El cuento debe girar en torno a "${theme}".
+                4.  **Extensión del Cuento**: Quiero ${storyLengthInstruction}.
+                5.  **Enseñanza o Moraleja**: El cuento debe transmitir sutilmente el siguiente valor o enseñanza: "${params.moral || 'la importancia de la amistad y la bondad'}". No lo digas explícitamente como "la moraleja es...", sino que debe ser una lección que se desprenda de la historia.
+
+                El cuento debe ser mágico, entretenido y dejar una impresión cálida y feliz en el niño. Evita temas complejos, aterradores o tristes.
+                Estructura el cuento con un inicio, un desarrollo y un final feliz.
+                El cuento debe estar en español.
+
+                Finalmente, devuelve tu respuesta como un único objeto JSON, sin nada más antes o después. El objeto debe tener la siguiente estructura: 
+                {
+                  "title": "Un título corto y atractivo para el cuento", 
+                  "story": "El texto completo del cuento aquí.",
+                  "image_prompt": "Una descripción en inglés, corta y muy visual para un modelo de generación de imágenes. Estilo: 'whimsical and dreamy children's storybook illustration'. Describe al protagonista y la escena principal de forma vívida."
+                }
+            `;
+
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+            });
+            const textResponse = response.text.trim();
+            const jsonString = textResponse.replace(/^```json|```$/g, '');
+            return JSON.parse(jsonString);
+        }
+
+        async function generateImage(prompt) {
+            try {
+                const response = await ai.models.generateContent({
+                    model: 'gemini-2.5-flash-image',
+                    contents: { parts: [{ text: prompt }] },
+                    config: { responseModalities: [Modality.IMAGE] },
+                });
+                
+                // Iterar partes para encontrar la imagen
+                if (response.candidates && response.candidates[0]?.content?.parts) {
+                    for (const part of response.candidates[0].content.parts) {
+                         if (part.inlineData) return part.inlineData.data;
+                    }
+                }
+                return null;
+            } catch (e) {
+                console.error("Error generating image", e);
+                return null;
+            }
+        }
+
+        async function generateQuestionsAPI(storyText, difficulty) {
+            const difficultyText = difficulty === 'easy' ? 'fácil (literal)' : difficulty === 'intermediate' ? 'intermedio (inferencial)' : 'difícil (crítico)';
+            
+            const prompt = `
+                Actúa como un experto pedagogo. Basándote en el siguiente cuento, genera 5 preguntas de comprensión lectora de nivel ${difficultyText}.
+                Cuento: "${storyText}"
+                Devuelve tu respuesta estrictamente como un objeto JSON con la clave "questions" que contenga un array de cadenas de texto.
+                Ejemplo: { "questions": ["¿Pregunta 1?", "¿Pregunta 2?", "¿Pregunta 3?", "¿Pregunta 4?", "¿Pregunta 5?"] }
+            `;
+
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+            });
+            const jsonString = response.text.trim().replace(/^```json|```$/g, '');
+            const parsed = JSON.parse(jsonString);
+            return parsed.questions;
+        }
+
+        // --- EVENT HANDLERS PRINCIPALES ---
+
+        els.storyForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            errorContainer.classList.add('hidden');
-            storyResultContainer.classList.add('hidden');
-            storyText.readOnly = true;
-            storyText.classList.remove('editing');
-            editStoryButton.textContent = 'Editar Cuento';
-            loader.classList.remove('hidden');
-            submitButton.disabled = true;
-            submitButton.innerHTML = 'Creando magia...';
+            // Switch UI
+            els.storyForm.classList.add('hidden');
+            els.savedStoriesSection.classList.add('hidden');
+            els.loadingSection.classList.remove('hidden');
+            els.loadingMessage.textContent = 'Escribiendo tu aventura...';
 
-            const age = document.getElementById('age').value;
-            const protagonists = document.getElementById('protagonists').value;
-            const theme = themeSelect.value;
-            const otherTheme = otherThemeInput.value;
-            const length = document.getElementById('length').value;
-            const moral = document.getElementById('moral').value;
-            
-            const finalTheme = theme === 'Otro' ? otherTheme : theme;
-            if (theme === 'Otro' && !finalTheme.trim()) {
-                errorContainer.textContent = 'Por favor, especifica un tema para el cuento.';
-                errorContainer.classList.remove('hidden');
-                loader.classList.add('hidden');
-                submitButton.disabled = false;
-                submitButton.innerHTML = 'Crear mi Cuento 🚀';
-                return;
-            }
-            
-            const lengthMap = {
-                'muy corto': 'de 1 a 2 párrafos',
-                'corto': 'de 3 a 4 párrafos',
-                'medio': 'de 5 a 7 párrafos',
-                'largo': 'de 8 a 10 párrafos',
+            const formData = {
+                age: document.getElementById('age').value,
+                protagonist: document.getElementById('protagonist').value,
+                theme: els.themeSelect.value,
+                customTheme: document.getElementById('customTheme').value,
+                length: state.length,
+                moral: document.getElementById('moral').value
             };
 
-            let prompt = `Crea un cuento infantil para un niño o niña en el rango de edad de "${age || 'cualquier edad'}".`;
-            if (protagonists) {
-                prompt += ` El/los protagonista(s) se llama(n) ${protagonists}.`;
-            }
-            prompt += ` El tema del cuento es "${finalTheme}".`;
-            prompt += ` La extensión del cuento debe ser ${lengthMap[length]}.`;
-            if (moral) {
-                prompt += ` El cuento debe incluir sutilmente la siguiente enseñanza o valor: "${moral}".`;
-            }
-            prompt += ` El tono debe ser amigable, mágico, positivo y adecuado para la edad indicada. Utiliza un lenguaje sencillo y claro. Finaliza con una frase bonita y memorable.`;
-
             try {
-                // IMPORTANT: This will fail on static hosting like GitHub Pages
-                // as process.env.API_KEY is not available in the browser.
-                const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-                const response = await ai.models.generateContent({
-                    model: 'gemini-2.5-flash',
-                    contents: prompt,
-                });
-                storyText.value = response.text;
-                storyResultContainer.classList.remove('hidden');
-            } catch (err) {
-                console.error(err);
-                if (typeof process === 'undefined') {
-                     errorContainer.textContent = 'Error: La clave de API no está configurada. Esta aplicación no puede funcionar en un entorno de archivos estáticos (como GitHub Pages) sin una configuración de servidor o un proxy para proteger la clave.';
-                } else {
-                    errorContainer.textContent = 'No se pudo generar el cuento. Por favor, revisa la consola para más detalles.';
-                }
-                errorContainer.classList.remove('hidden');
-            } finally {
-                loader.classList.add('hidden');
-                submitButton.disabled = false;
-                submitButton.innerHTML = 'Crear mi Cuento 🚀';
-            }
-        });
-        
-        editStoryButton.addEventListener('click', () => {
-            const isReadOnly = storyText.readOnly;
-            storyText.readOnly = !isReadOnly;
-            if (isReadOnly) {
-                editStoryButton.textContent = 'Guardar Cambios';
-                storyText.classList.add('editing');
-                storyText.focus();
-            } else {
-                editStoryButton.textContent = 'Editar Cuento';
-                storyText.classList.remove('editing');
-            }
-        });
-
-        downloadPdfButton.addEventListener('click', () => {
-            try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-    
-                const storyContent = storyText.value;
-                const protagonists = document.getElementById('protagonists').value.trim() || 'Cuento Mágico';
-                const fileName = `${protagonists.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
-    
-                const margin = 15;
-                const pageWidth = doc.internal.pageSize.getWidth();
-                const textWidth = pageWidth - margin * 2;
+                const { title, story: text, image_prompt } = await generateStory(formData);
                 
-                doc.setFont('Nunito', 'bold');
-                doc.setFontSize(18);
-                const title = protagonists;
-                doc.text(title, pageWidth / 2, margin, { align: 'center' });
-    
-                doc.setFont('Nunito', 'normal');
-                doc.setFontSize(12);
-                const lines = doc.splitTextToSize(storyContent, textWidth);
-                doc.text(lines, margin, margin + 15);
-    
-                doc.save(fileName);
-            } catch(e) {
-                console.error("Error generating PDF:", e);
-                errorContainer.textContent = 'Hubo un error al generar el PDF.';
-                errorContainer.classList.remove('hidden');
+                els.loadingMessage.textContent = 'Dibujando tu mundo mágico...';
+                const imageUrl = await generateImage(image_prompt);
+
+                const newStory = {
+                    id: Date.now().toString(),
+                    title,
+                    text,
+                    imageUrl,
+                    questions: []
+                };
+
+                state.currentStory = newStory;
+                saveStory(newStory);
+                showStoryView(newStory);
+                showToast();
+
+            } catch (error) {
+                console.error(error);
+                els.loadingSection.classList.add('hidden');
+                els.storyForm.classList.remove('hidden');
+                const errDiv = document.getElementById('formError');
+                errDiv.textContent = "Hubo un error al crear el cuento. Intenta de nuevo.";
+                errDiv.classList.remove('hidden');
             }
         });
+
+        document.getElementById('btnClean').addEventListener('click', resetForm);
+        document.getElementById('btnCreateAnother').addEventListener('click', resetToHome);
+
+        function resetForm() {
+            els.storyForm.reset();
+            document.getElementById('formError').classList.add('hidden');
+            // Reset length UI
+            document.querySelectorAll('.length-opt').forEach(opt => {
+                opt.classList.remove('bg-cyan-500', 'text-white', 'shadow');
+                opt.classList.add('bg-white');
+            });
+            // Default select 'medio'
+            const medio = document.querySelector('.length-opt[data-id="medio"]');
+            if(medio) {
+                medio.click();
+            }
+            els.customThemeContainer.classList.add('hidden');
+        }
+
+        function resetToHome() {
+            resetForm();
+            state.currentStory = null;
+            window.speechSynthesis.cancel();
+            els.resultContainer.classList.add('hidden');
+            els.mainContainer.classList.remove('hidden');
+            els.storyForm.classList.remove('hidden');
+            els.loadingSection.classList.add('hidden');
+            els.savedStoriesSection.classList.remove('hidden'); // Show Saved list again
+        }
+
+        // --- STORAGE ---
+
+        function saveStory(story) {
+            state.savedStories.unshift(story);
+            localStorage.setItem('magic_stories', JSON.stringify(state.savedStories));
+            renderSavedStories();
+        }
+
+        function loadSavedStories() {
+            try {
+                const s = localStorage.getItem('magic_stories');
+                if (s) {
+                    state.savedStories = JSON.parse(s);
+                    renderSavedStories();
+                    els.savedStoriesSection.classList.remove('hidden');
+                }
+            } catch(e) {}
+        }
+
+        function deleteStory(id) {
+            state.savedStories = state.savedStories.filter(s => s.id !== id);
+            localStorage.setItem('magic_stories', JSON.stringify(state.savedStories));
+            renderSavedStories();
+            if (state.savedStories.length === 0) els.savedStoriesSection.classList.add('hidden');
+        }
+
+        function renderSavedStories() {
+            if (state.savedStories.length > 0 && els.savedStoriesSection.classList.contains('hidden')) {
+                els.savedStoriesSection.classList.remove('hidden');
+            }
+
+            const searchTerm = els.searchInput.value.toLowerCase();
+            const filtered = state.savedStories
+                .filter(s => s.title.toLowerCase().includes(searchTerm) || s.text.toLowerCase().includes(searchTerm))
+                .sort((a, b) => {
+                    return els.sortOrder.value === 'newest' 
+                        ? parseInt(b.id) - parseInt(a.id) 
+                        : parseInt(a.id) - parseInt(b.id);
+                });
+
+            if (filtered.length === 0) {
+                els.storiesList.innerHTML = '<div class="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 text-gray-400">No se encontraron cuentos.</div>';
+                return;
+            }
+
+            els.storiesList.innerHTML = filtered.map(story => `
+                <div class="story-card flex items-center p-4 bg-white rounded-xl shadow border border-gray-100 hover:shadow-lg hover:border-cyan-200 transition-all duration-200 cursor-pointer group relative overflow-hidden" data-id="${story.id}">
+                    <div class="h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100 mr-5 border border-gray-200 shadow-sm">
+                         ${story.imageUrl 
+                            ? `<img src="data:image/png;base64,${story.imageUrl}" class="h-full w-full object-cover transform group-hover:scale-110 transition-transform duration-500">`
+                            : '<div class="h-full w-full flex items-center justify-center text-gray-300 text-2xl">📖</div>'}
+                    </div>
+                    <div class="flex-grow min-w-0">
+                        <h4 class="font-bold text-lg text-gray-800 group-hover:text-cyan-700 transition-colors truncate">${story.title}</h4>
+                        <p class="text-sm text-gray-500 mt-1 flex items-center">
+                            <span class="bg-gray-100 px-2 py-0.5 rounded text-xs font-medium text-gray-600">${new Date(parseInt(story.id)).toLocaleDateString('es-ES')}</span>
+                        </p>
+                    </div>
+                    <button class="delete-btn p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all opacity-0 group-hover:opacity-100 focus:opacity-100" data-id="${story.id}" title="Eliminar cuento">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                </div>
+            `).join('');
+
+            // Event listeners for items
+            document.querySelectorAll('.story-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const id = card.dataset.id;
+                    const story = state.savedStories.find(s => s.id === id);
+                    if (story) {
+                        state.currentStory = story;
+                        showStoryView(story);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (confirm('¿Seguro que quieres borrar este cuento?')) {
+                        deleteStory(btn.dataset.id);
+                    }
+                });
+            });
+        }
+
+        // --- VISTA CUENTO ---
+
+        function showStoryView(story) {
+            els.mainContainer.classList.add('hidden');
+            els.resultContainer.classList.remove('hidden');
+            window.scrollTo(0,0);
+
+            els.resultTitle.textContent = story.title;
+            
+            // Render Text paragraphs
+            els.resultText.innerHTML = story.text.split('\n')
+                .filter(p => p.trim() !== '')
+                .map(p => `<p class="mb-4">${p}</p>`)
+                .join('');
+
+            if (story.imageUrl) {
+                els.resultImage.src = `data:image/png;base64,${story.imageUrl}`;
+                els.resultImage.classList.remove('hidden');
+            } else {
+                els.resultImage.classList.add('hidden');
+            }
+
+            renderQuestionsUI(story);
+        }
+
+        function renderQuestionsUI(story) {
+            const hasQuestions = story.questions && story.questions.length > 0;
+            
+            if (hasQuestions) {
+                els.questionsList.innerHTML = story.questions.map(q => `<li class="mb-1">${q}</li>`).join('');
+                els.questionsList.classList.remove('hidden');
+                els.questionsPrompt.textContent = "¿Quieres añadir más preguntas? Selecciona el nivel:";
+            } else {
+                els.questionsList.classList.add('hidden');
+                els.questionsPrompt.textContent = "¿Quieres profundizar en la historia? Genera preguntas automáticas:";
+            }
+        }
+
+        async function handleGenerateQuestions(difficulty) {
+            if (!state.currentStory) return;
+
+            els.questionsLoading.classList.remove('hidden');
+            els.questionsControls.classList.add('hidden');
+
+            try {
+                const newQuestions = await generateQuestionsAPI(state.currentStory.text, difficulty);
+                const existing = state.currentStory.questions || [];
+                state.currentStory.questions = [...existing, ...newQuestions];
+                
+                // Update storage
+                state.savedStories = state.savedStories.map(s => s.id === state.currentStory.id ? state.currentStory : s);
+                localStorage.setItem('magic_stories', JSON.stringify(state.savedStories));
+                
+                renderQuestionsUI(state.currentStory);
+
+            } catch (e) {
+                alert('Error al generar preguntas');
+            } finally {
+                els.questionsLoading.classList.add('hidden');
+                els.questionsControls.classList.remove('hidden');
+            }
+        }
+
+        // --- EXTRAS: TTS, PDF, Share ---
+
+        // TTS
+        function loadVoices() {
+            state.voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('es')).sort((a, b) => a.name.localeCompare(b.name));
+            els.voiceSelect.innerHTML = state.voices.map(v => `<option value="${v.voiceURI}">${v.name}</option>`).join('');
+        }
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+        loadVoices();
+
+        document.getElementById('btnPlayPause').addEventListener('click', () => {
+            if (state.isSpeaking) {
+                if (state.isPaused) {
+                    window.speechSynthesis.resume();
+                    state.isPaused = false;
+                    updatePlayIcon(true);
+                } else {
+                    window.speechSynthesis.pause();
+                    state.isPaused = true;
+                    updatePlayIcon(false);
+                }
+            } else {
+                const text = `${state.currentStory.title}. ${state.currentStory.text}`;
+                utterance = new SpeechSynthesisUtterance(text);
+                const voiceURI = els.voiceSelect.value;
+                utterance.voice = state.voices.find(v => v.voiceURI === voiceURI);
+                
+                utterance.onstart = () => {
+                    state.isSpeaking = true; 
+                    state.isPaused = false;
+                    document.getElementById('btnStop').disabled = false;
+                    updatePlayIcon(true);
+                };
+                utterance.onend = () => stopSpeaking();
+                utterance.onerror = () => stopSpeaking();
+                
+                window.speechSynthesis.speak(utterance);
+            }
+        });
+
+        document.getElementById('btnStop').addEventListener('click', stopSpeaking);
+
+        function stopSpeaking() {
+            window.speechSynthesis.cancel();
+            state.isSpeaking = false;
+            state.isPaused = false;
+            document.getElementById('btnStop').disabled = true;
+            updatePlayIcon(false);
+        }
+
+        function updatePlayIcon(isPlaying) {
+            if (isPlaying) {
+                document.getElementById('iconPlay').classList.add('hidden');
+                document.getElementById('iconPause').classList.remove('hidden');
+            } else {
+                document.getElementById('iconPlay').classList.remove('hidden');
+                document.getElementById('iconPause').classList.add('hidden');
+            }
+        }
+
+        // PDF
+        document.getElementById('btnPdf').addEventListener('click', async () => {
+            const content = document.getElementById('storyContentArea');
+            const { jsPDF } = window.jspdf;
+            
+            const canvas = await html2canvas(content, { scale: 2 });
+            const imgData = canvas.toDataURL('image/png');
+            
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            const ratio = canvas.width / canvas.height;
+            const width = pdfWidth - 20;
+            const height = width / ratio;
+
+            let position = 10;
+            if (height < pdfHeight - 20) {
+                pdf.addImage(imgData, 'PNG', 10, position, width, height);
+            } else {
+                let heightLeft = canvas.height;
+                let y = 0;
+                const pageHeight = pdfHeight - 20;
+                // Simplificado para una sola página o ajuste básico
+                pdf.addImage(imgData, 'PNG', 10, position, width, height);
+            }
+            
+            pdf.save(`${state.currentStory.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`);
+        });
+
+        // Share
+        document.getElementById('btnShare').addEventListener('click', async () => {
+            if (navigator.share) {
+                await navigator.share({ title: state.currentStory.title, text: state.currentStory.text });
+            } else {
+                await navigator.clipboard.writeText(`${state.currentStory.title}\n\n${state.currentStory.text}`);
+                const span = document.getElementById('shareText');
+                const original = span.textContent;
+                span.textContent = "¡Copiado!";
+                setTimeout(() => span.textContent = original, 2000);
+            }
+        });
+
+        // Toast
+        function showToast() {
+            els.toast.classList.remove('hidden');
+            setTimeout(() => els.toast.classList.add('hidden'), 4000);
+        }
+
+        // --- MODO LECTURA ---
+
+        document.getElementById('btnReadingMode').addEventListener('click', () => {
+            els.readingModeOverlay.classList.remove('hidden');
+            els.readingTitle.textContent = state.currentStory.title;
+            
+            els.readingText.innerHTML = state.currentStory.text.split('\n')
+                .filter(p => p.trim() !== '')
+                .map(p => `<p class="mb-6">${p}</p>`)
+                .join('');
+            
+            if (state.currentStory.imageUrl) {
+                els.readingImage.src = `data:image/png;base64,${state.currentStory.imageUrl}`;
+                els.readingImageContainer.classList.remove('hidden');
+            } else {
+                els.readingImageContainer.classList.add('hidden');
+            }
+
+            if (state.currentStory.questions && state.currentStory.questions.length > 0) {
+                els.readingQuestionsSection.classList.remove('hidden');
+                els.readingQuestionsList.innerHTML = state.currentStory.questions.map(q => `<li>${q}</li>`).join('');
+            } else {
+                els.readingQuestionsSection.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('btnCloseReading').addEventListener('click', () => {
+            els.readingModeOverlay.classList.add('hidden');
+        });
+
+        document.getElementById('btnIncreaseFont').addEventListener('click', () => {
+            if (state.readingFontSize < 32) {
+                state.readingFontSize += 2;
+                updateReadingStyle();
+            }
+        });
+        document.getElementById('btnDecreaseFont').addEventListener('click', () => {
+            if (state.readingFontSize > 14) {
+                state.readingFontSize -= 2;
+                updateReadingStyle();
+            }
+        });
+
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                state.readingTheme = btn.dataset.theme;
+                updateReadingStyle();
+            });
+        });
+
+        function updateReadingStyle() {
+            els.fontSizeDisplay.textContent = state.readingFontSize;
+            els.readingText.style.fontSize = `${state.readingFontSize}px`;
+            
+            // Classes reset
+            els.readingModeOverlay.className = `fixed inset-0 z-50 overflow-y-auto transition-colors duration-300 ${
+                state.readingTheme === 'dark' ? 'bg-gray-900 text-gray-200' :
+                state.readingTheme === 'sepia' ? 'bg-[#f4ecd8] text-[#5b4636]' :
+                'bg-white text-gray-800'
+            }`;
+            
+            // Theme buttons selection visual
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                const isSelected = btn.dataset.theme === state.readingTheme;
+                if (state.readingTheme === 'light') {
+                    btn.className = `theme-btn p-2 rounded-full border ${isSelected ? 'border-yellow-500 bg-yellow-50 text-yellow-600' : 'border-transparent hover:bg-black hover:bg-opacity-5'}`;
+                } else if (state.readingTheme === 'sepia') {
+                     btn.className = `theme-btn p-2 rounded-full border ${isSelected ? 'border-orange-400 bg-[#e8dfc6] text-[#5b4636]' : 'border-transparent hover:bg-black hover:bg-opacity-5'}`;
+                } else {
+                     btn.className = `theme-btn p-2 rounded-full border ${isSelected ? 'border-gray-500 bg-gray-700 text-white' : 'border-transparent hover:bg-black hover:bg-opacity-5'}`;
+                }
+            });
+        }
+
     </script>
 <script type="module" src="/index.tsx"></script>
 </body>
